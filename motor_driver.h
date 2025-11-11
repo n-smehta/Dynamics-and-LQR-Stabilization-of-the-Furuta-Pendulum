@@ -16,6 +16,7 @@
 
 // === Function prototypes ===
 void driver_init(void);
+
 int calculate_duty_cycle(float duty_cycle);
 void drive_motor(int direction, float speed);
 

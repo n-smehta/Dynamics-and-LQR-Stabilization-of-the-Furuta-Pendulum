@@ -10,6 +10,7 @@
 
 
 #include "tm4c123gh6pm.h"
+#include <stdint.h>
 #include "encoder.h"
 
 //Consists of the various functions required to utilize the encoder

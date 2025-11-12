@@ -7,7 +7,8 @@
  *
  */
 
-#include "motor_drive.h"
+#include "motor_driver.h"
+>>>>>>> test_libraries
 
 void driver_init()
 {
@@ -38,8 +39,13 @@ void driver_init()
     PWM0_3_LOAD_R = reload_value -1; //20kHz has 800 clock pulses
 
     //Setting both to 0 duty Cycle
+<<<<<<< HEAD
     PWM0_3_CMPA_R = reload_value -1;
     PWM0_3_CMPB_R = reload_value -1;
+=======
+    PWM0_3_CMPA_R = 399;
+    PWM0_3_CMPB_R = 0;
+>>>>>>> test_libraries
 
     PWM0_3_CTL_R |= 1;
 
@@ -55,25 +61,30 @@ void driver_init()
 
 void drive_motor(int direction, float speed)
 {
-    if (speed < 0) speed = 0;
+        if (speed < 0) speed = 0;
         if (speed > 1) speed = 1;
 
-        int cmp_val = RELOAD_VALUE - (int)(speed * RELOAD_VALUE);
+        int cmp_val = RELOAD_VALUE - (int)(speed * RELOAD_VALUE) - 1;
 
         if (speed == 0) {
-            PWM0_3_CMPA_R = RELOAD_VALUE - 1;
-            PWM0_3_CMPB_R = RELOAD_VALUE - 1;
+            PWM0_ENABLE_R &= ~(1<<6);
+            PWM0_ENABLE_R &= ~(1<<7);
             return;
         }
 
+
         if (direction > 0) {
             // Forward
+            PWM0_ENABLE_R |= (1<<6);
+            PWM0_ENABLE_R &= ~(1<<7);
             PWM0_3_CMPA_R = cmp_val;
-            PWM0_3_CMPB_R = RELOAD_VALUE - 1; // Off
+
         } else {
             // Reverse
+            PWM0_ENABLE_R |= (1<<7);
+            PWM0_ENABLE_R &= ~(1<<6);
             PWM0_3_CMPB_R = cmp_val;
-            PWM0_3_CMPA_R = RELOAD_VALUE - 1; // Off
+
         }
 }
 

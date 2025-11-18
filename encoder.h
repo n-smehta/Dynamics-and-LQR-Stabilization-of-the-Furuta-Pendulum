@@ -15,6 +15,7 @@ struct EncoderState
 {
     int position;
     int velocity;
+    bool direction;
     float angle;
     float angle_velocity;
 };

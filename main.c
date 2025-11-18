@@ -104,24 +104,24 @@ int main(void)
         struct EncoderState cart = read_cart_state();
         struct EncoderState pendulum = read_pendulum_state();
 
-//        snprintf(buffer, sizeof(buffer),
-//                 "Cart Pos: %d  Angle: %.2f rad | Pend Pos: %d  Angle: %.2f rad\r\n",
-//                 cart.position, cart.angle,
-//                 pendulum.position, pendulum.angle);
-//
-//        UART0_SendString(buffer);
-
         int position = cart.position;
         int position_1 = pendulum.position;
         itoa(position, buffer);
         itoa(position_1, buffer1);
 
+        char dir_0 = cart.direction ? '1' : '0';
+        char dir_1 = pendulum.direction ? '1' : '0';
+
         //Data for plotter
         UART0_SendString(">C:");
         UART0_SendString(buffer);
+        UART0_SendString(" Dir:");
+        UART0_SendChar(dir_0);
         UART0_SendString(",");
         UART0_SendString("P:");
         UART0_SendString(buffer1);
+        UART0_SendString(" Dir:");
+        UART0_SendChar(dir_1);
         UART0_SendString("\r\n");
 
     }

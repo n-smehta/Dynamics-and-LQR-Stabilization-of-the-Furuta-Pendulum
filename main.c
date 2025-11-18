@@ -89,6 +89,32 @@ static int itoa(int num, char* str)
     return i;
 }
 
+void floatToString(float n, char *res) {
+    int intPart = (int)n;
+    float fractional = n - intPart;
+
+    if (fractional < 0)
+        fractional = -fractional;
+
+    // Convert integer part
+    int i = itoa(intPart, res);
+
+    // Decimal point
+    res[i++] = '.';
+
+    // Scale fractional part to 5 digits
+    int frac = (int)(fractional * 100000);
+
+    // Ensure exactly 5 digits with leading zeros
+    res[i + 4] = (frac % 10) + '0'; frac /= 10;
+    res[i + 3] = (frac % 10) + '0'; frac /= 10;
+    res[i + 2] = (frac % 10) + '0'; frac /= 10;
+    res[i + 1] = (frac % 10) + '0'; frac /= 10;
+    res[i + 0] = (frac % 10) + '0';
+
+    res[i + 5] = '\0';
+}
+
 int main(void)
 {
     char buffer[100];
@@ -104,10 +130,12 @@ int main(void)
         struct EncoderState cart = read_cart_state();
         struct EncoderState pendulum = read_pendulum_state();
 
-        int position = cart.position;
-        int position_1 = pendulum.position;
-        itoa(position, buffer);
-        itoa(position_1, buffer1);
+
+        float angle_c = cart.angle;
+        float angle_p = pendulum.angle;
+
+        floatToString(angle_c, buffer);
+        floatToString(angle_p, buffer1);
 
         char dir_0 = cart.direction ? '1' : '0';
         char dir_1 = pendulum.direction ? '1' : '0';

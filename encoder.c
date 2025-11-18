@@ -60,8 +60,8 @@ struct EncoderState read_cart_state()
     cart_state.position = position;
     cart_state.velocity = velocity;
     cart_state.direction = direction;
-    cart_state.angle = (position/( ENCODER_COUNT-1))*2*M_PI;
-    cart_state.angle_velocity = (velocity/( ENCODER_COUNT-1))*2*M_PI;
+    cart_state.angle = ((float)position/(float)(ENCODER_COUNT-1))*2*M_PI;
+    cart_state.angle_velocity = ((float)velocity/(float)(ENCODER_COUNT-1))*2*M_PI;
 
     return cart_state;
 }
@@ -76,8 +76,8 @@ struct EncoderState read_pendulum_state()
     pendulum_state.position = position;
     pendulum_state.velocity = velocity;
     pendulum_state.direction = direction;
-    pendulum_state.angle = (position/( ENCODER_COUNT-1))*2*M_PI;
-    pendulum_state.angle_velocity = (velocity/( ENCODER_COUNT-1))*2*M_PI;
+    pendulum_state.angle = ((float)position/(float)(ENCODER_COUNT-1))*2*M_PI;
+    pendulum_state.angle_velocity = ((float)velocity/(float)(ENCODER_COUNT-1))*2*M_PI;
 
     return pendulum_state;
 }

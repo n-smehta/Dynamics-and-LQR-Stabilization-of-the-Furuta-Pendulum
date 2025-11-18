@@ -8,7 +8,7 @@
  */
 
 #include "motor_driver.h"
->>>>>>> test_libraries
+
 
 void driver_init()
 {
@@ -39,13 +39,10 @@ void driver_init()
     PWM0_3_LOAD_R = reload_value -1; //20kHz has 800 clock pulses
 
     //Setting both to 0 duty Cycle
-<<<<<<< HEAD
-    PWM0_3_CMPA_R = reload_value -1;
-    PWM0_3_CMPB_R = reload_value -1;
-=======
+
     PWM0_3_CMPA_R = 399;
     PWM0_3_CMPB_R = 0;
->>>>>>> test_libraries
+
 
     PWM0_3_CTL_R |= 1;
 

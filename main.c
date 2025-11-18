@@ -1,48 +1,68 @@
-/*
- * main.c
- * Demonstrates reading encoder data and transmitting via UART0
- */
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include "tm4c123gh6pm.h"
 #include "encoder.h"
+#include "debug.h"
 
-// UART0 initialization (PA0 = RX, PA1 = TX)
-void UART0_Init(void)
+
+
+//System parameters
+#define MOTOR_R 3
+#define MOTOR_Kt 3.37
+#define SUPPLY_VOLTAGE 12
+const float TORQUE_2_DUTY = MOTOR_R/(MOTOR_Kt*SUPPLY_VOLTAGE)
+
+//Controller parameters
+const float K[4] = {100, 1, 10, 1};
+#define CONTROLLER_FREQ 10 //Hz
+
+void delayMs(int);
+float controller(int *x);
+
+
+
+int main(void)
 {
-    SYSCTL_RCGCUART_R |= (1 << 0);  // Enable UART0 clock
-    SYSCTL_RCGCGPIO_R |= (1 << 0);  // Enable Port A clock
+    char buffer[100];
+    char buffer1[100];
 
-    // Configure PA0, PA1 for alternate function (UART)
-    GPIO_PORTA_AFSEL_R |= (1 << 0) | (1 << 1);
-    GPIO_PORTA_PCTL_R |= (1 << 0) | (1 << 4); // UART0 RX/TX
-    GPIO_PORTA_DEN_R  |= (1 << 0) | (1 << 1);
+    debug_init();
+    encoder_init();
 
-    UART0_CTL_R &= ~(1 << 0);       // Disable UART0 during config
-    UART0_IBRD_R = 104;             // 16MHz / (16 * 9600) = 104.166
-    UART0_FBRD_R = 11;              // Fractional part (.166 * 64 + 0.5)
-    UART0_LCRH_R = (0x3 << 5);      // 8-bit, no parity, 1 stop bit
-    UART0_CTL_R = (1 << 0) | (1 << 8) | (1 << 9);  // Enable UART0, TXE, RXE
-}
+    debug_send_string("\r\nEncoder UART Output Initialized\r\n");
 
-// Send a single character
-void UART0_SendChar(char c)
-{
-    while ((UART0_FR_R & (1 << 5)) != 0); // Wait until TXFF is clear
-    UART0_DR_R = c;
-}
-
-// Send a string
-void UART0_SendString(const char *str)
-{
-    while (*str)
+    while (1)
     {
-        UART0_SendChar(*str++);
-    }
-}
+        struct EncoderState cart = read_cart_state();
+        struct EncoderState pendulum = read_pendulum_state();
 
+
+        float angle_c = cart.angle;
+        float angle_p = pendulum.angle;
+
+        float_to_string(angle_c, buffer);
+        float_to_string(angle_p, buffer1);
+
+        char dir_0 = cart.direction ? '1' : '0';
+        char dir_1 = pendulum.direction ? '1' : '0';
+
+        //Data for plotter
+        debug_send_string(">C:");
+        debug_send_string(buffer);
+        debug_send_string(" Dir:");
+        debug_send_char(dir_0);
+        debug_send_string(",");
+        debug_send_string("P:");
+        debug_send_string(buffer1);
+        debug_send_string(" Dir:");
+        debug_send_char(dir_1);
+        debug_send_string("\r\n");
+
+    }
+
+
+}
 // Delay (approx, not precise)
 void delayMs(int n)
 {
@@ -51,28 +71,7 @@ void delayMs(int n)
         for (j = 0; j < 3180; j++);
 }
 
-int main(void)
+float controller(int* x)
 {
-    char buffer[100];
-
-    UART0_Init();
-    encoder_init();
-
-    UART0_SendString("\r\nEncoder UART Output Initialized\r\n");
-
-    while (1)
-    {
-        struct EncoderState cart = read_cart_state();
-        struct EncoderState pendulum = read_pendulum_state();
-
-        snprintf(buffer, sizeof(buffer),
-                 "Cart Pos: %d  Angle: %.2f rad | Pend Pos: %d  Angle: %.2f rad\r\n",
-                 cart.position, cart.angle,
-                 pendulum.position, pendulum.angle);
-
-        UART0_SendString(buffer);
-
-        delayMs(200); // 5 Hz refresh rate
-    }
-
+    return TORQUE_2_DUTY*(K[0]*x[0] + K[1]*x[1] + K[2]*x[2] + K[3]*x[3]);
 }

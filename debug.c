@@ -6,7 +6,7 @@
  */
 
 #include "debug.h"
-
+#include "encoder.h"
 void debug_init(void)
 {
     SYSCTL_RCGCUART_R |= (1 << 0);  // Enable UART0 clock
@@ -106,5 +106,39 @@ void float_to_string(float n, char *res) {
     res[i + 0] = (frac % 10) + '0';
 
     res[i + 5] = '\0';
+}
+
+void send_system_state(struct EncoderState cart, struct EncoderState pendulum, float duty_cycle)
+{
+
+    char cart_angle_str[40];
+    char pend_angle_str[40];
+    char duty_str[40];
+
+    // Convert values to string
+    float_to_string(cart.angle, cart_angle_str);
+    float_to_string(pendulum.angle, pend_angle_str);
+    float_to_string(duty_cycle, duty_str);
+
+    char cart_dir = cart.direction ? '1' : '0';
+    char pend_dir = pendulum.direction ? '1' : '0';
+
+    // Begin formatted message
+    debug_send_string(">C:");
+    debug_send_string(cart_angle_str);
+    debug_send_string(" Dir:");
+    debug_send_char(cart_dir);
+    debug_send_string(", ");
+
+    debug_send_string("P:");
+    debug_send_string(pend_angle_str);
+    debug_send_string(" Dir:");
+    debug_send_char(pend_dir);
+    debug_send_string(", ");
+
+    debug_send_string("Duty:");
+    debug_send_string(duty_str);
+
+    debug_send_string("\r\n");
 }
 

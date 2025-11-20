@@ -13,8 +13,8 @@
 #define SUPPLY_VOLTAGE 12
 const float TORQUE_2_DUTY = MOTOR_R/(MOTOR_Kt*SUPPLY_VOLTAGE);
 
-//Controller parameters
-const float K[4] = {100, 1, 10, 1};
+//Controller parameter
+const float K[4] = {1392.8, -10, 183.6, -34.3};
 #define CONTROLLER_FREQ 10 //Hz
 
 void delayMs(int);
@@ -24,9 +24,13 @@ void controller_init();
 void controller_handler();
 void disable_controller();
 
+float custom_abs(float);
+
 volatile float duty_cycle = 0;
 volatile struct EncoderState cart;
 volatile struct EncoderState pendulum;
+
+volatile bool disabledController = 0;
 int main(void)
 {
 
@@ -39,25 +43,33 @@ int main(void)
     debug_send_string("\rInitialized encoder successfully\n");
     driver_init();
     debug_send_string("\rInitialized motor driver successfully\n");
+    debug_send_string("\rInitializing Controller\n");
+    controller_init();
+    debug_send_string("\rPendulum has started!!\n");
+
 
     while (1)
     {
-        cart = read_cart_state();
-        pendulum = read_pendulum_state();
-
-        if(abs(pendulum.angle) > 0.174533)
+        if(!disabledController)
         {
-            //Not in permissible limits stop
-            debug_send_string("\rPendulum angle limit reached stopping controller\n");
-            disable_controller();
-        }
-        if(abs(cart.angle) > 1.5708)
-        {
-            debug_send_string("\rCart angle limit reached stopping controller\n");
-            //Not in permissible limits stop
-            disable_controller();
-        }
+            cart = read_cart_state();
+            pendulum = read_pendulum_state();
 
+//            if(custom_abs(pendulum.angle) > 0.174533)
+//            {
+//                //Not in permissible limits stop
+//                debug_send_string("\rPendulum angle limit reached stopping controller\n");
+//                disable_controller();
+//            }
+//            if(custom_abs(cart.angle) > 1.5708)
+//            {
+//                debug_send_string("\rCart angle limit reached stopping controller\n");
+//                //Not in permissible limits stop
+//                disable_controller();
+//            }
+
+        }
+        drive_motor(1,0.0);
 
 
     }
@@ -88,7 +100,7 @@ void controller_handler()
 {
     float x[4] = {pendulum.angle, cart.angle, pendulum.angle_velocity, cart.angle_velocity};
 
-    duty_cycle = TORQUE_2_DUTY*(K[0]*x[0] + K[1]*x[1] + K[2]*x[2] + K[3]*x[3]); //Calculate Duty Cycle
+    duty_cycle = 0.01*TORQUE_2_DUTY*(K[0]*x[0] + K[1]*x[1] + K[2]*x[2] + K[3]*x[3]); //Calculate Duty Cycle
 
     if(duty_cycle < 0)
     {
@@ -104,6 +116,8 @@ void controller_handler()
 
 void disable_controller()
 {
+    disabledController = 1;
+    drive_motor(1, 0.001);
     debug_send_string("Disabled Controller");
     NVIC_ST_CTRL_R &= ~(1); //Disable systick timer
 }
@@ -112,4 +126,9 @@ void disable_controller()
 void SysTickHandler(void)
 {
     controller_handler();
+}
+
+float custom_abs(float val)
+{
+    return val > 0?val:-val;
 }

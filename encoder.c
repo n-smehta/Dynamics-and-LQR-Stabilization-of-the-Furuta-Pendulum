@@ -45,7 +45,10 @@ void encoder_init()
     QEI0_CTL_R |= (1 << 0);
 
     QEI1_CTL_R = (1<<5); //Enabling velocity capture
-    QEI0_CTL_R |= (1 << 4) | (1 << 3);
+    QEI1_CTL_R |= (1 << 4) | (1 << 3);
+    // Velocity capture timer (1ms update)
+    QEI0_LOAD_R = 16000;
+    QEI1_LOAD_R = 16000;
     QEI1_MAXPOS_R = ENCODER_COUNT-1; //Recheck model once
     QEI1_CTL_R |= (1 << 0);
 }
@@ -61,7 +64,18 @@ struct EncoderState read_cart_state()
     cart_state.velocity = velocity;
     cart_state.direction = direction;
     cart_state.angle = ((float)position/(float)(ENCODER_COUNT-1))*2*M_PI;
+
+//    if (cart_state.angle > M_PI )
+//    {
+//        cart_state.angle -= 2*M_PI;
+//    }
+
     cart_state.angle_velocity = ((float)velocity/(float)(ENCODER_COUNT-1))*2*M_PI;
+
+    if (cart_state.direction)
+    {
+        cart_state.angle_velocity *= -1;
+    }
 
     return cart_state;
 }
@@ -77,7 +91,17 @@ struct EncoderState read_pendulum_state()
     pendulum_state.velocity = velocity;
     pendulum_state.direction = direction;
     pendulum_state.angle = ((float)position/(float)(ENCODER_COUNT-1))*2*M_PI;
+
+//    if (pendulum_state.angle > M_PI)
+//    {
+//        pendulum_state.angle -= 2 * M_PI;
+//    }
     pendulum_state.angle_velocity = ((float)velocity/(float)(ENCODER_COUNT-1))*2*M_PI;
+
+    if (pendulum_state.direction)
+    {
+        pendulum_state.angle_velocity *= - 1;
+    }
 
     return pendulum_state;
 }
